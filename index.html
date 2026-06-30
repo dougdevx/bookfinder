@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookFinder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-top">
+      <a class="nav-logo" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span class="logo-text">Book<span>Finder</span></span>
+      </a>
+      <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <h1 class="hero-title">Encontre o livro <em>certo</em> para você</h1>
+      <p class="hero-sub">Pesquise milhares de títulos, compare edições, preços e vendedores. Tudo em um só lugar.</p>
+
+      <div class="hero-search-wrap">
+        <form class="hero-search" onsubmit="handleHeroSearch(event)">
+          <input type="text" id="hero-input" placeholder="Título, autor ou categoria..." autofocus />
+          <button type="submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            Pesquisar
+          </button>
+        </form>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-number" id="stat-books">—</div>
+          <div class="stat-label">Livros</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="stat-authors">—</div>
+          <div class="stat-label">Autores</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="stat-cats">—</div>
+          <div class="stat-label">Categorias</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="stat-listings">—</div>
+          <div class="stat-label">Anúncios</div>
+        </div>
+      </div>
+    </section>
+
+  <footer>
+    <p>Trabalho acadêmico — Banco de Dados · <strong>Amazon Book Dataset</strong></p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+  <script>
+    // ─── FUNÇÕES DE NAVEGAÇÃO ──────────────────────────────────
+    function toggleMobileNav() {
+      document.getElementById('navbar-links').classList.toggle('open');
+    }
+
+    function handleHeroSearch(e) {
+      e.preventDefault();
+      const q = document.getElementById('hero-input').value.trim();
+      navigateSearch(q);
+    }
+
+    function searchFor(term) {
+      document.getElementById('hero-input').value = term;
+      navigateSearch(term);
+    }
+
+    function navigateSearch(query) {
+      saveSearch(query);
+      window.location.href = `results.html?q=${encodeURIComponent(query)}`;
+    }
+
+    function buildStats() {
+      const books = BOOKS_DATA || [];
+      const authors = new Set(books.map(b => b.author));
+      const cats = new Set(books.flatMap(b => b.categories || []));
+      const listings = books.reduce((acc, b) => acc + (b.listings || []).length, 0);
+      animateCount('stat-books', books.length);
+      animateCount('stat-authors', authors.size);
+      animateCount('stat-cats', cats.size);
+      animateCount('stat-listings', listings);
+    }
+
+    function animateCount(id, target) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let cur = 0;
+      const step = Math.max(1, Math.floor(target / 30));
+      const t = setInterval(() => {
+        cur = Math.min(cur + step, target);
+        el.textContent = cur.toLocaleString('pt-BR');
+        if (cur >= target) clearInterval(t);
+      }, 30);
+    }
+
+    function buildCategories() {
+      const grid = document.getElementById('categories-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      const catCount = {};
+      (BOOKS_DATA || []).forEach(b => (b.categories || []).forEach(c => {
+        catCount[c] = (catCount[c] || 0) + 1;
+      }));
+      if (Object.keys(catCount).length === 0) {
+        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#999;">Nenhuma categoria disponível.</p>`;
+        return;
+      }
+      
+      Object.entries(catCount).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        card.innerHTML = `
+          <div class="category-icon">${CAT_ICONS[cat] || '📚'}</div>
+          <div class="category-name">${cat}</div>
+          <div class="category-count">${count} livro${count > 1 ? 's' : ''}</div>
+        `;
+        card.addEventListener('click', () => searchFor(cat));
+        grid.appendChild(card);
+      });
+    }
+
+    function buildNavDropdown() {
+      const menu = document.getElementById('cat-dropdown');
+      if (!menu) return;
+      menu.innerHTML = '';
+      const cats = getAllCategories(BOOKS_DATA);
+      cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-dropdown-item';
+        btn.innerHTML = `<span class="cat-dot"></span>${cat}`;
+        btn.addEventListener('click', () => {
+          window.location.href = `results.html?cat=${encodeURIComponent(cat)}&q=`;
+        });
+        menu.appendChild(btn);
+      });
+    }
+
+    // ─── INICIALIZAÇÃO ──────────────────────────────────────────
+    async function init() {
+      console.log('Inicializando BookFinder...');
+
+      try {
+        // Carrega os dados da API
+        await loadBooks();
+        console.log(`${BOOKS_DATA.length} livros carregados da API`);
+
+        // Carrega as seções
+        await Promise.all([
+          carregarLivroDestaque(),
+          carregarCatalogo(),
+          carregarFiccao(),
+          carregarCategoriasElite(),
+          carregarAcimaDaMedia()
+        ]);
+
+        // Constrói UI
+        buildStats();
+        buildCategories();
+        buildNavDropdown();
+
+        console.log('✅ BookFinder inicializado com sucesso!');
+
+      } catch (error) {
+        console.error('Erro na inicialização:', error);
+        document.getElementById('book-highlight').innerHTML = `
+          <div class="bk-error" style="padding:40px;text-align:center;">
+            <p style="color:#e74c3c;">Erro ao carregar dados. Verifique se o servidor Flask está rodando.</p>
+            <p style="font-size:14px;color:#999;">Execute: python3 app.py</p>
+          </div>
+        `;
+      }
+    }
+
+    // Inicia quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
