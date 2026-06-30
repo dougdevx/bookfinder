@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Detalhe do Livro — BookSearch</title>
+  <title>Detalhe do Livro</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ── NAVBAR ── -->
   <nav class="navbar">
     <div class="navbar-inner">
       <a class="nav-logo" href="index.html">
@@ -30,10 +29,8 @@
     </div>
   </nav>
 
-  <!-- ── PAGE CONTENT ── -->
   <div class="detail-layout">
 
-    <!-- Breadcrumb -->
     <nav class="breadcrumb" id="breadcrumb">
       <a href="index.html">Início</a>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -46,12 +43,9 @@
       <span id="breadcrumb-title">Livro</span>
     </nav>
 
-    <!-- ── MAIN BOOK CARD ── -->
     <div class="book-detail-card" id="book-detail-card">
-      <!-- populated by JS -->
     </div>
 
-    <!-- ── LISTINGS ── -->
     <div class="section-card" id="listings-section">
       <div class="section-card-header">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,7 +71,6 @@
       </div>
     </div>
 
-    <!-- ── EDITIONS ── -->
     <div class="section-card" id="editions-section" style="display:none">
       <div class="section-card-header">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -88,9 +81,8 @@
       <div class="editions-grid" id="editions-grid"></div>
     </div>
 
-  </div><!-- /.detail-layout -->
+  </div>
 
-  <!-- ── FOOTER ── -->
   <footer>
     <p>Trabalho acadêmico — Banco de Dados · <strong>Amazon Book Dataset</strong></p>
   </footer>
@@ -114,13 +106,11 @@
       return html;
     }
 
-    // ── Load book ────────────────────────────────────────────
     function init() {
       const params = new URLSearchParams(window.location.search);
       const id     = params.get('id');
       const book   = getBookById(id);
 
-      // restore nav search
       const saved = loadSearch();
       document.getElementById('nav-input').value = saved;
 
@@ -142,7 +132,6 @@
       renderEditions(book);
     }
 
-    // ── Render main info ─────────────────────────────────────
     function renderMain(book) {
       const card = document.getElementById('book-detail-card');
 
@@ -160,7 +149,6 @@
         .map(c => `<span class="badge badge-orange">${escHtml(c)}</span>`)
         .join('');
 
-      // Best price from listings
       const bestPrice = Math.min(...book.listings.map(l => l.price));
       const bestListing = book.listings.find(l => l.price === bestPrice);
 
@@ -220,7 +208,6 @@
       `;
     }
 
-    // ── Render listings table ────────────────────────────────
     function renderListings(book) {
       const tbody = document.getElementById('listings-body');
 
@@ -253,7 +240,6 @@
       });
     }
 
-    // ── Render editions ──────────────────────────────────────
     function renderEditions(book) {
       if (!book.editions || book.editions.length <= 1) return;
 
