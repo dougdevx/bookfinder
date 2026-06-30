@@ -336,7 +336,7 @@ footer strong { color: var(--orange); }
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  background: linear-gradient(180deg, var(--navy) 0%, #1e2d40 55%, var(--bg) 55%);
+  background: linear-gradient(180deg, var(--navy) 0%, #1e2d40 57%, var(--bg) 57%);
 }
 
 .hero-eyebrow {
